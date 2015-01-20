@@ -1,4 +1,5 @@
 class CrmClass# < ActiveRecord::Base
+  @id
   @uri
   @comment
   @label
@@ -7,7 +8,7 @@ class CrmClass# < ActiveRecord::Base
   @superClasses = Array.new
   @subClasses = Array.new
 
-def uri=(uri)
+  def uri=(uri)
     @uri = uri
   end
 
@@ -33,10 +34,17 @@ def uri=(uri)
   
    def notation=(notation)
     @notation = notation
+    puts notation.value
+    @id = notation.value.byteslice(1,notation.value.length)
+    puts @id
   end
 
   def notation
     @notation
+  end
+  
+  def id
+    @id
   end
   
   def addSuperClass superClass

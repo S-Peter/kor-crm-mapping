@@ -16,28 +16,73 @@ class WelcomeController < ApplicationController
   @@owlInverseOf = RDF::URI.new("http://www.w3.org/2002/07/owl#inverseOf")
   @@rdfsSubPropertyOfURI = RDF::URI.new("http://www.w3.org/2000/01/rdf-schema#subPropertyOf")
   
+  @graph
+  
+  @crmClasses = Array.new
+  @crmProperties = Array.new
+  
+  @kinds
+  @relations
+  
+  @kindIndex
+  @kind
+  
   def index  
     #Load KOR-Resources
-  	puts ActiveRecord::Base.connection.current_database
-  	@kinds = Kind.take(2)
-  	@relations = Relation.take(2)
-  	@entities = Entity.take(2)
-  	@relationships = Relationship.take(2)
-  	deriveActualRelationsFromRelationships
-  	
+  	loadKor
   	#Load CRM-Resources
-  	if @graph == nil
-  	  @graph = RDF::Graph.load("http://erlangen-crm.org/140617/", :format => :rdfxml)
+  	loadCRM
+  	@kindIndex = 0
+    if @kindIndex < @kinds.length
+      @kind = @kinds[@kindIndex]
+      render 'mapKorKind' 
+    else
+      #render 'displayMapping'
+    end
+  end 
+  
+  def mapKorKind
+    puts 'MAPKORKIND'
+  end
+  
+  def mapKorRelationRange
+    
+  end
+  
+  def mapKorRelationProperty
+  
+  end
+  
+  def mapKorRelationDomain
+    
+  end
+  
+  def displayMapping
+    
+  end
+  
+  private
+  def loadKor
+    puts ActiveRecord::Base.connection.current_database
+    @kinds = Kind.take(2) #Kind.all
+    @relations = Relation.take(2) #Relationship.all
+    deriveActualRelationsFromRelationships
+  end
+  
+  private
+  def loadCRM
+    if @graph == nil
+      @graph = RDF::Graph.load("http://erlangen-crm.org/140617/", :format => :rdfxml)
       puts "Number of statements of graph: #{@graph.size}"
       loadCRMClasses
       loadCRMProperties
-  	end
-  end 
+    end
+  end
   
   private
   def deriveActualRelationsFromRelationships
-    #@relationships = Relationship.all #TODO decomment for full application
-	  for relationship in @relationships
+    relationships = Relationship.take(50)
+	  for relationship in relationships
 		  relationOfRelationship = relationship.relation
 		  domainClassOfRelationship = relationship.domain.kind
 		  rangeClassOfRelationship = relationship.range.kind
@@ -47,22 +92,22 @@ class WelcomeController < ApplicationController
 		  if !actualRelations.nil?
 			 for actualRelation in actualRelations
 				  if actualRelation.domain == domainClassOfRelationship and actualRelation.range == rangeClassOfRelationship
-					 actualRelationWithSameDomainAndRangeExists=true;
+					   actualRelationWithSameDomainAndRangeExists=true;
 				  end
 			 end
 			 if actualRelationWithSameDomainAndRangeExists == false
 				  newActualRelation = ActualRelation.new relationOfRelationship, domainClassOfRelationship, rangeClassOfRelationship
 				  actualRelations.push newActualRelation
-			 end #end?
-		   else
+			 end
+		  else
 			 newActualRelation = ActualRelation.new relationOfRelationship, domainClassOfRelationship, rangeClassOfRelationship
 			 actualRelations = Array.new
 			 actualRelations.push newActualRelation
 			 relationOfRelationship.actualRelations=actualRelations
 		  end
-		  puts newActualRelation.relation.name
-		  puts newActualRelation.domain.name
-		  puts newActualRelation.range.name
+		  #puts newActualRelation.relation.name
+		  #puts newActualRelation.domain.name
+		  #puts newActualRelation.range.name
 	   end
   end
   
@@ -297,7 +342,6 @@ class WelcomeController < ApplicationController
  private
  def printCRMProperties
     file = File.new("crmProperties", "w")
-    puts "CRMProperties:"
     @crmProperties.each do |crmProperty|
       file.write crmProperty.uri.inspect
       file.write "\n" 

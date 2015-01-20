@@ -4,4 +4,15 @@ class Kind < ActiveRecord::Base #EntityType
 	@id
 	@name
 	@description
+	
+	@crmClass
+	
+	def crmClass
+    return @crmClass
+  end
+  
+  def crmClass=(crmClass)
+    @crmClass = crmClass
+  end
+	
 end
