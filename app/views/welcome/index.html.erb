@@ -7,7 +7,7 @@
 	<th>Description</th>
   </tr>
  
-  <% @korKinds.each do |kind| %>
+  <% @kinds.each do |kind| %>
     <tr>
       <td><%= kind.id %></td>
       <td><%= kind.name %></td>
@@ -25,7 +25,7 @@
 	<th>Reverse Name</th>
 	<th>Description</th>
   </tr>
-  <% @korRelations.each do |relation| %>
+  <% @relations.each do |relation| %>
     <tr>
       <td><%= relation.id %></td>
       <td><%= relation.name %></td>

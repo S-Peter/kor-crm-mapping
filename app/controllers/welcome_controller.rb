@@ -18,8 +18,8 @@ class WelcomeController < ApplicationController
   
   @graph
   
-  @crmClasses = Array.new
-  @crmProperties = Array.new
+  @@crmClasses
+  @crmProperties
   
   @kinds
   @relations
@@ -27,14 +27,30 @@ class WelcomeController < ApplicationController
   @kindIndex
   @kind
   
+=begin
+  def initialize
+    #Load KOR-Resources
+    loadKor
+    #Load CRM-Resources
+    loadCRM
+  end
+=end  
+
   def index  
     #Load KOR-Resources
-  	loadKor
-  	#Load CRM-Resources
-  	loadCRM
-  	@kindIndex = 0
+    loadKor
+    #Load CRM-Resources
+    loadCRM
+    session[:crmClasses] = @crmClasses
+    session[:crmProperties] = @crmProperties
+    session[:kinds] = @kinds
+    session[:relations] = @relations
+    session[:kind] = @kind
+    
+    @kindIndex = 0
     if @kindIndex < @kinds.length
       @kind = @kinds[@kindIndex]
+      @crmClasses
       render 'mapKorKind' 
     else
       #render 'displayMapping'
@@ -42,7 +58,16 @@ class WelcomeController < ApplicationController
   end 
   
   def mapKorKind
-    puts 'MAPKORKIND'
+    @crmClasses = session[:crmClasses]
+    @kind = session[:kind]
+ 
+    for mappedCRMClass in @crmClasses do
+      if mappedCRMClass.id == params[:crmc]
+        break
+      end
+    end
+    @kind.crmClass=mappedCRMClass
+    puts @kind.crmClass.label
   end
   
   def mapKorRelationRange
@@ -64,8 +89,8 @@ class WelcomeController < ApplicationController
   private
   def loadKor
     puts ActiveRecord::Base.connection.current_database
-    @kinds = Kind.take(2) #Kind.all
-    @relations = Relation.take(2) #Relationship.all
+    @kinds = Kind.take(2) #TODO Kind.all
+    @relations = Relation.take(2) #TODO Relationship.all
     deriveActualRelationsFromRelationships
   end
   
@@ -81,34 +106,31 @@ class WelcomeController < ApplicationController
   
   private
   def deriveActualRelationsFromRelationships
-    relationships = Relationship.take(50)
-	  for relationship in relationships
-		  relationOfRelationship = relationship.relation
-		  domainClassOfRelationship = relationship.domain.kind
-		  rangeClassOfRelationship = relationship.range.kind
-			
-		  actualRelations = relationOfRelationship.actualRelations
-		  actualRelationWithSameDomainAndRangeExists = false;
-		  if !actualRelations.nil?
-			 for actualRelation in actualRelations
-				  if actualRelation.domain == domainClassOfRelationship and actualRelation.range == rangeClassOfRelationship
-					   actualRelationWithSameDomainAndRangeExists=true;
-				  end
-			 end
-			 if actualRelationWithSameDomainAndRangeExists == false
-				  newActualRelation = ActualRelation.new relationOfRelationship, domainClassOfRelationship, rangeClassOfRelationship
-				  actualRelations.push newActualRelation
-			 end
-		  else
-			 newActualRelation = ActualRelation.new relationOfRelationship, domainClassOfRelationship, rangeClassOfRelationship
-			 actualRelations = Array.new
-			 actualRelations.push newActualRelation
-			 relationOfRelationship.actualRelations=actualRelations
-		  end
-		  #puts newActualRelation.relation.name
-		  #puts newActualRelation.domain.name
-		  #puts newActualRelation.range.name
-	   end
+    relationships = Relationship.take(50) #TODO .All
+    for relationship in relationships
+      relationOfRelationship = relationship.relation
+      domainClassOfRelationship = relationship.domain.kind
+      rangeClassOfRelationship = relationship.range.kind
+      
+      actualRelations = relationOfRelationship.actualRelations
+      actualRelationWithSameDomainAndRangeExists = false;
+      if !actualRelations.nil?
+       for actualRelation in actualRelations
+          if actualRelation.domain == domainClassOfRelationship and actualRelation.range == rangeClassOfRelationship
+             actualRelationWithSameDomainAndRangeExists=true;
+          end
+       end
+       if actualRelationWithSameDomainAndRangeExists == false
+          newActualRelation = ActualRelation.new relationOfRelationship, domainClassOfRelationship, rangeClassOfRelationship
+          actualRelations.push newActualRelation
+       end
+      else
+       newActualRelation = ActualRelation.new relationOfRelationship, domainClassOfRelationship, rangeClassOfRelationship
+       actualRelations = Array.new
+       actualRelations.push newActualRelation
+       relationOfRelationship.actualRelations=actualRelations
+      end
+     end
   end
   
   private 
@@ -126,7 +148,6 @@ class WelcomeController < ApplicationController
   private 
   def loadCRMClasses
     statements = @graph.query([nil, @@rdfTypeURI, @@owlClassURI])
-    #puts "Number of classes: #{statements.count}"
     @crmClasses = Array.new
     statements.each_subject do |subject|
       if subject.uri?
@@ -158,7 +179,6 @@ class WelcomeController < ApplicationController
     @crmClasses.each do |crmClass|
       statements = @graph.query([crmClass.uri, @@rdfsSubClassOfURI, nil])
       statements.each_object do |object|
-        puts "add super and subclasses"
         if object.uri?
           if object.starts_with? @@ecrmNamespace
             puts object.inspect
@@ -194,7 +214,6 @@ class WelcomeController < ApplicationController
   private 
   def loadCRMProperties
     statements = @graph.query([nil, @@rdfTypeURI, @@owlObjectPropertyURI || @@owlDatatypePropertyURI])
-    puts "Number of properties: #{statements.count}"
     @crmProperties = Array.new
     statements.each_subject do |subject|
       if subject.uri?
