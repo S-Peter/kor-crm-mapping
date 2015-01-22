@@ -40,3 +40,5 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin]
 
 gem 'rdf'
 gem 'rdf-rdfxml'
+
+gem 'activerecord-session_store'

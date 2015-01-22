@@ -1,5 +1,5 @@
 class CrmClass# < ActiveRecord::Base
-  @id
+  @number
   @uri
   @comment
   @label
@@ -43,8 +43,8 @@ class CrmClass# < ActiveRecord::Base
     @notation
   end
   
-  def id
-    @id
+  def number
+    @number
   end
   
   def addSuperClass superClass
@@ -71,3 +71,4 @@ class CrmClass# < ActiveRecord::Base
   
   
 end
+

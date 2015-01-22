@@ -7,7 +7,7 @@
 	<tr>
 		<td><%= label_tag(:crmc, "CRM class:") %></td>
 		<td>
-			<%= select_tag :crmc, options_from_collection_for_select(@crmClasses, :id, :label) %>
+			<%= select_tag :crmc, options_from_collection_for_select(@crmClasses, :number, :label) %>
 		</td>
 	</tr>
 	<tr>

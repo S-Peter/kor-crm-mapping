@@ -41,16 +41,16 @@ class WelcomeController < ApplicationController
     loadKor
     #Load CRM-Resources
     loadCRM
-    session[:crmClasses] = @crmClasses
-    session[:crmProperties] = @crmProperties
+    #session[:crmClasses] = @crmClasses
+    #session[:crmProperties] = @crmProperties
     session[:kinds] = @kinds
     session[:relations] = @relations
-    session[:kind] = @kind
+    
     
     @kindIndex = 0
     if @kindIndex < @kinds.length
       @kind = @kinds[@kindIndex]
-      @crmClasses
+      session[:kind] = @kind
       render 'mapKorKind' 
     else
       #render 'displayMapping'
@@ -58,15 +58,21 @@ class WelcomeController < ApplicationController
   end 
   
   def mapKorKind
-    @crmClasses = session[:crmClasses]
+    #@crmClasses = session[:crmClasses]
     @kind = session[:kind]
- 
+    @kinds = session[:kinds]
+    @relations = session[:relations]
+    puts @kind.name
+    puts @kinds.length
+    puts@relations.length
+=begin 
     for mappedCRMClass in @crmClasses do
       if mappedCRMClass.id == params[:crmc]
         break
       end
     end
     @kind.crmClass=mappedCRMClass
+=end
     puts @kind.crmClass.label
   end
   
