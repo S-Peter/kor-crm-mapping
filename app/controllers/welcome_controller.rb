@@ -18,7 +18,7 @@ class WelcomeController < ApplicationController
   
   @graph
   
-  @@crmClasses
+  @crmClasses
   @crmProperties
   
   @kinds
@@ -41,16 +41,26 @@ class WelcomeController < ApplicationController
     loadKor
     #Load CRM-Resources
     loadCRM
-    #session[:crmClasses] = @crmClasses
-    #session[:crmProperties] = @crmProperties
+    
+    for crmClass in @crmClasses
+      puts crmClass.label
+    end
+    
+    for crmProperty in @crmProperties
+      puts crmProperty.label
+    end
+    
+    session[:crmClasses] = @crmClasses
+    session[:crmProperties] = @crmProperties
+
     session[:kinds] = @kinds
     session[:relations] = @relations
-    
-    
+   
     @kindIndex = 0
     if @kindIndex < @kinds.length
       @kind = @kinds[@kindIndex]
       session[:kind] = @kind
+      session[:kindIndex] = @kindIndex
       render 'mapKorKind' 
     else
       #render 'displayMapping'
@@ -58,21 +68,20 @@ class WelcomeController < ApplicationController
   end 
   
   def mapKorKind
-    #@crmClasses = session[:crmClasses]
     @kind = session[:kind]
     @kinds = session[:kinds]
-    @relations = session[:relations]
     puts @kind.name
     puts @kinds.length
-    puts@relations.length
-=begin 
+    
+    @crmClasses= session[:crmClasses]
+    
     for mappedCRMClass in @crmClasses do
-      if mappedCRMClass.id == params[:crmc]
+      if mappedCRMClass.number == params[:crmc]
         break
       end
     end
     @kind.crmClass=mappedCRMClass
-=end
+
     puts @kind.crmClass.label
   end
   
@@ -92,27 +101,29 @@ class WelcomeController < ApplicationController
     
   end
   
+  private 
+  def writeNTriplesToFile
+    file = File.new("ecrm_ntriples", "w")
+    RDF::RDFXML::Reader.open("http://erlangen-crm.org/140617/") do |reader|
+      reader.each_statement do |statement|
+        file.write statement.inspect
+        file.write "\n"
+      end
+    file.close
+    end    
+  end
+  
   private
   def loadKor
     puts ActiveRecord::Base.connection.current_database
     @kinds = Kind.take(2) #TODO Kind.all
-    @relations = Relation.take(2) #TODO Relationship.all
+    @relations = Relation.take(2) #TODO Relation.all
     deriveActualRelationsFromRelationships
   end
   
   private
-  def loadCRM
-    if @graph == nil
-      @graph = RDF::Graph.load("http://erlangen-crm.org/140617/", :format => :rdfxml)
-      puts "Number of statements of graph: #{@graph.size}"
-      loadCRMClasses
-      loadCRMProperties
-    end
-  end
-  
-  private
   def deriveActualRelationsFromRelationships
-    relationships = Relationship.take(50) #TODO .All
+    relationships = Relationship.take(50) #TODO Relationship.all
     for relationship in relationships
       relationOfRelationship = relationship.relation
       domainClassOfRelationship = relationship.domain.kind
@@ -138,17 +149,14 @@ class WelcomeController < ApplicationController
       end
      end
   end
-  
-  private 
-  def writeNTriplesToFile
-    file = File.new("ecrm_ntriples", "w")
-    RDF::RDFXML::Reader.open("http://erlangen-crm.org/140617/") do |reader|
-      reader.each_statement do |statement|
-        file.write statement.inspect
-        file.write "\n"
-      end
-    file.close
-    end    
+   
+  private
+  def loadCRM
+    if @graph == nil
+      @graph = RDF::Graph.load("http://erlangen-crm.org/140617/", :format => :rdfxml)
+      loadCRMClasses
+      loadCRMProperties
+    end
   end
 
   private 
@@ -158,29 +166,29 @@ class WelcomeController < ApplicationController
     statements.each_subject do |subject|
       if subject.uri?
         if subject.starts_with? @@ecrmNamespace
-        crmClass = CrmClass.new
-        crmClass.uri = subject
-        
-        statements = @graph.query([subject, @@rdfsLabelURI, nil])
-        statements.each_object do |object|
-          crmClass.label = object
-        end
-        
-        statements = @graph.query([subject, @@rdfsCommentURI, nil])
-        statements.each_object do |object|
-          crmClass.comment = object
-        end
-        
-        statements = @graph.query([subject, @@skosNotationURI, nil])
-        statements.each_object do |object|
-          crmClass.notation = object
-        end
+          crmClass = CrmClass.new
+          crmClass.uri = subject
+          
+          statements = @graph.query([subject, @@rdfsLabelURI, nil])
+          statements.each_object do |object|
+            crmClass.label = object
+          end
+          
+          statements = @graph.query([subject, @@rdfsCommentURI, nil])
+          statements.each_object do |object|
+            crmClass.comment = object
+          end
+          
+          statements = @graph.query([subject, @@skosNotationURI, nil])
+          statements.each_object do |object|
+            crmClass.notation = object
+          end
         end
      end
         
      @crmClasses.push crmClass
     end
-    
+   
     #Add Super & Sub Classes
     @crmClasses.each do |crmClass|
       statements = @graph.query([crmClass.uri, @@rdfsSubClassOfURI, nil])
@@ -195,7 +203,8 @@ class WelcomeController < ApplicationController
         end 
       end
     end
-    
+
+=begin    
     puts "CRMClasses:"
     @crmClasses.each do |crmClass|
       puts crmClass.uri.inspect
@@ -215,6 +224,7 @@ class WelcomeController < ApplicationController
       end
       end    
     end
+=end
   end
   
   private 
@@ -271,28 +281,6 @@ class WelcomeController < ApplicationController
     completeMissingDomainAndRange
     printCRMProperties
   end
-  
- private 
- def getClassOfUri uri
-   existingCrmClass = nil
-   @crmClasses.each do |crmClass|
-     if (crmClass.uri.eql? uri) && (existingCrmClass == nil)
-       existingCrmClass = crmClass
-     end
-   end
-   return existingCrmClass
- end
- 
- private 
- def getPropertyOfUri uri
-   existingCrmProperty = nil
-   @crmProperties.each do |crmProperty|
-     if (crmProperty.uri.eql? uri) && (existingCrmProperty == nil)
-       existingCrmProperty = crmProperty
-     end
-   end
-   return existingCrmProperty
- end
  
  #Add Super-, Sub- and InverseProperties
  private 
@@ -362,6 +350,28 @@ class WelcomeController < ApplicationController
    else 
      return deriveRangeFromSuperProperty crmProperty.superProperties.first
    end
+ end
+
+ private 
+ def getClassOfUri uri
+   existingCrmClass = nil
+   @crmClasses.each do |crmClass|
+     if (crmClass.uri.eql? uri) && (existingCrmClass == nil)
+       existingCrmClass = crmClass
+     end
+   end
+   return existingCrmClass
+ end
+ 
+ private 
+ def getPropertyOfUri uri
+   existingCrmProperty = nil
+   @crmProperties.each do |crmProperty|
+     if (crmProperty.uri.eql? uri) && (existingCrmProperty == nil)
+       existingCrmProperty = crmProperty
+     end
+   end
+   return existingCrmProperty
  end
  
  private

@@ -71,4 +71,3 @@ class CrmClass# < ActiveRecord::Base
   
   
 end
-

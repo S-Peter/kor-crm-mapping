@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150122111536) do
+ActiveRecord::Schema.define(version: 20150122134853) do
 
   create_table "authority_group_categories", force: true do |t|
     t.integer  "lock_version"
@@ -77,6 +77,13 @@ ActiveRecord::Schema.define(version: 20150122111536) do
   add_index "credentials_users", ["user_id"], name: "index_credentials_users_on_user_id", using: :btree
 
   create_table "crm_classes", force: true do |t|
+    t.string   "uri"
+    t.string   "comment"
+    t.string   "label"
+    t.string   "notation"
+    t.integer  "number"
+    t.integer  "superclasses_id"
+    t.integer  "subclasses_id"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -368,6 +375,11 @@ ActiveRecord::Schema.define(version: 20150122111536) do
 
   add_index "sessions", ["session_id"], name: "index_sessions_on_session_id", unique: true, using: :btree
   add_index "sessions", ["updated_at"], name: "index_sessions_on_updated_at", using: :btree
+
+  create_table "superclass_subclass", force: true do |t|
+    t.integer "superclass_id"
+    t.integer "subclass_id"
+  end
 
   create_table "synonyms", force: true do |t|
     t.integer "entity_id"
