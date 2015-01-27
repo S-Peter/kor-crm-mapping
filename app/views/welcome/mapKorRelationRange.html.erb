@@ -1,0 +1,23 @@
+<%= form_tag({controller: "welcome", action: "mapKorRelationRange"}, method: "get") do %>
+<table>
+	<tr>
+		<td>Kor Actual Relation</td>
+		<td><%= @actualRelation.relation.name %></td>
+	</tr>
+	<tr>
+		<td>Kor Actual Relation Range</td>
+		<td><%= @actualRelation.range.name %></td>
+	</tr>
+	<tr>
+		<td><%= label_tag(:range, "CRM class:") %></td>
+		<td>
+			<%= select_tag :range, options_from_collection_for_select(@crmClasses, :number, :label) %>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<%= submit_tag("OK") %>
+		</td>
+	</tr>
+</table>
+<% end %>

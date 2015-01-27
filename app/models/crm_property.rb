@@ -1,4 +1,5 @@
 class CrmProperty #< ActiveRecord::Base
+  @number
   @uri
   @label
   @notation
@@ -38,10 +39,22 @@ class CrmProperty #< ActiveRecord::Base
   
    def notation=(notation)
     @notation = notation
+    puts @notation
+    if notation.value[-1, 1].eql? "i"
+      @number = notation.value.byteslice(1,notation.value.length-1).to_i * 2
+      puts "Inverse : #{@number}"
+    else
+      @number = (notation.value.byteslice(1,notation.value.length).to_i * 2) - 1
+      puts "Normal : #{@number}"
+    end
   end
 
   def notation
     @notation
+  end
+  
+  def number
+    @number
   end
   
   def domain=(domain)

@@ -34,9 +34,7 @@ class CrmClass# < ActiveRecord::Base
   
    def notation=(notation)
     @notation = notation
-    puts notation.value
-    @id = notation.value.byteslice(1,notation.value.length)
-    puts @id
+    @number = notation.value.byteslice(1,notation.value.length)
   end
 
   def notation

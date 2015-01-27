@@ -8,7 +8,7 @@ Bundler.require(*Rails.groups)
 
 module Mysqltestproject
   class Application < Rails::Application
-    config.cache_store = :memory_store, { size: 254.megabytes }
+    config.cache_store = :memory_store, { size: 512.megabytes }
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.

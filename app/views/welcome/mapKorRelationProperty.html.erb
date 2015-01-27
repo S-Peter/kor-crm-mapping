@@ -1,0 +1,27 @@
+<%= form_tag({controller: "welcome", action: "mapKorRelationProperty"}, method: "get") do %>
+<table>
+	<tr>
+		<td>Actual Relation</td>
+		<td><%= @actualRelation.relation.name %>: <%= @actualRelation.domain.name %> to <%= @actualRelation.range.name %></td>
+	</tr>>
+	<tr>
+		<td>CRM Domain</td>
+		<td><%= @kind.crmClass.label %></td>
+	</tr>
+	<tr>
+		<td>CRM Range</td>
+		<td><%= @actualRelation.chainLinks.last %></td>
+	</tr>
+	<tr>
+		<td><%= label_tag(:property, "CRM Property") %></td>
+		<td>
+			<%= select_tag :property, options_from_collection_for_select(@fittingCRMProperties, :number, :label) %>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<%= submit_tag("OK") %>
+		</td>
+	</tr>
+</table>
+<% end %>
