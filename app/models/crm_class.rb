@@ -34,7 +34,7 @@ class CrmClass# < ActiveRecord::Base
   
    def notation=(notation)
     @notation = notation
-    @number = notation.value.byteslice(1,notation.value.length)
+    @number = notation.value.byteslice(1,notation.value.length).to_i
   end
 
   def notation
@@ -63,9 +63,49 @@ class CrmClass# < ActiveRecord::Base
     @subClasses.push subClass
   end
   
-    def subClasses
+  def subClasses
     @subClasses
   end
   
+  def getDirectOrIndirectSubClasses
+    directOrIndirectSubClasses = Array.new
+    if @subClasses != nil
+      for subClass in @subClasses
+        directOrIndirectSubClasses.push subClass
+        directOrIndirectSubClasses.push subClass.getDirectOrIndirectSubClasses
+      end
+    end
+    return directOrIndirectSubClasses
+  end
   
+  def getDirectOrIndirectSuperClasses
+    puts "directOrIndirectSuperClasses"
+    directOrIndirectSuperClasses = Array.new
+    if @superClasses != nil
+      for superClass in @superClasses
+        directOrIndirectSuperClasses.push superClass
+        directOrIndirectSuperClasses.push superClass.getDirectOrIndirectSuperClasses
+      end
+    end
+    return directOrIndirectSuperClasses
+  end
+  
+  def isA? crmClass
+    isA = false
+    puts crmClass.label
+    if crmClass.number == number
+      isA = true
+    else
+      if @superClasses != nil
+        for superClass in @superClasses
+          isA = superClass.isA? crmClass
+          if isA == true
+            break
+          end
+        end
+      end
+    end
+    return isA
+  end
+ 
 end

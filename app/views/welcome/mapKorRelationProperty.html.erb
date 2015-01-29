@@ -2,15 +2,15 @@
 <table>
 	<tr>
 		<td>Actual Relation</td>
-		<td><%= @actualRelation.relation.name %>: <%= @actualRelation.domain.name %> to <%= @actualRelation.range.name %></td>
-	</tr>>
+		<td><%= @actualRelation.relation.name %>: from <%= @actualRelation.domain.name %> to <%= @actualRelation.range.name %></td>
+	</tr>
 	<tr>
 		<td>CRM Domain</td>
 		<td><%= @kind.crmClass.label %></td>
 	</tr>
 	<tr>
 		<td>CRM Range</td>
-		<td><%= @actualRelation.chainLinks.last %></td>
+		<td><%= @actualRelation.chainLinks.last.label %></td>
 	</tr>
 	<tr>
 		<td><%= label_tag(:property, "CRM Property") %></td>

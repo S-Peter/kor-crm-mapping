@@ -39,13 +39,10 @@ class CrmProperty #< ActiveRecord::Base
   
    def notation=(notation)
     @notation = notation
-    puts @notation
     if notation.value[-1, 1].eql? "i"
       @number = notation.value.byteslice(1,notation.value.length-1).to_i * 2
-      puts "Inverse : #{@number}"
     else
       @number = (notation.value.byteslice(1,notation.value.length).to_i * 2) - 1
-      puts "Normal : #{@number}"
     end
   end
 
@@ -61,16 +58,30 @@ class CrmProperty #< ActiveRecord::Base
     @domain = domain
   end
 
-  def domain
+  def domain 
     @domain
+  end
+  
+  def domainClasses #list of most abstract domain class and its subclasses
+    domainClasses = Array.new
+    domainClasses.push @domain
+    domainClasses.push @domain.directOrIndirectSubClasses
+    return domainClasses
   end
   
   def range=(range)
     @range = range
   end
 
-  def range
+  def range 
     @range
+  end
+  
+  def getRangeClasses #list of most abstract class and its subclasses
+    rangeClasses = Array.new
+    rangeClasses.push @range
+    rangeClasses.push @range.directOrIndirectSubClasses
+    return rangeClasses
   end
   
   def inverseOf=(inverseOf)
@@ -99,7 +110,8 @@ class CrmProperty #< ActiveRecord::Base
     @subProperties.push subProperty
   end
   
-    def subProperties
+  def subProperties
     @subProperties
   end
+  
 end

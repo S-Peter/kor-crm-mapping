@@ -9,9 +9,9 @@
 		<td><%= @actualRelation.range.name %></td>
 	</tr>
 	<tr>
-		<td><%= label_tag(:range, "CRM class:") %></td>
+		<td><%= label_tag(:crmc, "CRM class:") %></td>
 		<td>
-			<%= select_tag :range, options_from_collection_for_select(@crmClasses, :number, :label) %>
+			<%= select_tag :crmc, options_from_collection_for_select(@crmClasses, :number, :label) %>
 		</td>
 	</tr>
 	<tr>
