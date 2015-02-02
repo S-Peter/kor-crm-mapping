@@ -1,5 +1,5 @@
-class CrmProperty #< ActiveRecord::Base
-  @number
+class CrmProperty < CrmRessource
+  
   @uri
   @label
   @notation
@@ -48,10 +48,6 @@ class CrmProperty #< ActiveRecord::Base
 
   def notation
     @notation
-  end
-  
-  def number
-    @number
   end
   
   def domain=(domain)

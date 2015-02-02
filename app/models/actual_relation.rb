@@ -30,8 +30,20 @@ class ActualRelation
     @chainLinks.push resource
   end
   
+  def addChainLinkProperty crmProperty
+    @chainLinks = @chainLinks.insert(-2, crmProperty)
+  end
+  
+  def addChainLinkInnerNode crmClass
+    @chainLinks = @chainLinks.insert(-2, crmClass)
+  end
+  
   def chainLinks
     @chainLinks
+  end
+  
+  def getLastDomainClassInChainLinks
+    return @chainLinks[@chainLinks.length-2]
   end
   
 end

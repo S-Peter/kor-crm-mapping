@@ -6,6 +6,10 @@ Rails.application.routes.draw do
   get 'welcome/mapKorKind', to: 'welcome#mapKorKind'
   get 'welcome/mapKorRelationRange', to: 'welcome#mapKorRelationRange'
   get 'welcome/mapKorRelationProperty', to: 'welcome#mapKorRelationProperty'
+  
+  get 'welcome/preMapKorKind', to: 'welcome#preMapKorKind'
+  get 'welcome/preMapKorRelationRange', to: 'welcome#preMapKorRelationRange'
+  get 'welcome/preMapKorRelationProperty', to: 'welcome#preMapKorRelationProperty'
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".

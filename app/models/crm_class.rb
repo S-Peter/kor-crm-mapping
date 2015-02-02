@@ -1,5 +1,4 @@
-class CrmClass# < ActiveRecord::Base
-  @number
+class CrmClass < CrmRessource
   @uri
   @comment
   @label
@@ -41,10 +40,6 @@ class CrmClass# < ActiveRecord::Base
     @notation
   end
   
-  def number
-    @number
-  end
-  
   def addSuperClass superClass
     if @superClasses == nil
       @superClasses = Array.new
@@ -79,7 +74,6 @@ class CrmClass# < ActiveRecord::Base
   end
   
   def getDirectOrIndirectSuperClasses
-    puts "directOrIndirectSuperClasses"
     directOrIndirectSuperClasses = Array.new
     if @superClasses != nil
       for superClass in @superClasses
@@ -92,7 +86,6 @@ class CrmClass# < ActiveRecord::Base
   
   def isA? crmClass
     isA = false
-    puts crmClass.label
     if crmClass.number == number
       isA = true
     else

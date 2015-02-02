@@ -52,6 +52,7 @@ class WelcomeController < ApplicationController
     
   end 
   
+=begin  
   def mapKorKind
     postMapKorKind
     puts "MapKorKind"
@@ -65,16 +66,10 @@ class WelcomeController < ApplicationController
   end
   
   def mapKorRelationProperty
-  
+    postMapKorRelationProperty
+    puts "MapKorRelationProperty"
   end
-  
-  def mapKorRelationDomain
-    
-  end
-  
-  def displayMapping
-    
-  end
+=end
   
   def preMapKorKind
     @kinds = session[:kinds]
@@ -88,13 +83,14 @@ class WelcomeController < ApplicationController
       session[:kind] = @kind  
       render 'mapKorKind' 
     else # all kinds mapped -> end
-      #render 'displayMapping' 
+      displayMapping
     end
   end
   
-  def postMapKorKind
+  def mapKorKind
     @kind = session[:kind]
     @crmClasses= session[:crmClasses]
+    @relations = session[:relations]
     
     for mappedCRMClass in @crmClasses do
       if mappedCRMClass.number == params[:crmc].to_i
@@ -103,8 +99,7 @@ class WelcomeController < ApplicationController
     end
     @kind.crmClass=mappedCRMClass
     
-    @relations = session[:relations]
-
+    #calculate actual relations for given domain
     @actualRelationsWithDomain = Array.new
     for relation in @relations
       if relation.actualRelations != nil
@@ -115,19 +110,24 @@ class WelcomeController < ApplicationController
         end
       end
     end
-    
     session[:actualRelationsWithDomain] = @actualRelationsWithDomain
+    
+    #increment kindIndex
     @kindIndex = session[:kindIndex]
     @kindIndex = @kindIndex + 1
     session[:kindIndex] = @kindIndex # nötig?
+    
+    preMapKorRelationRange
   end
     
   def preMapKorRelationRange
+    puts "preMapKorRelationRange"
     @actualRelationsWithDomain = session[:actualRelationsWithDomain]
     @actualRelationIndex = session[:actualRelationIndex]
     if @actualRelationIndex == nil # no actual relation for kind mapped yet
       @actualRelationIndex = 0
     end
+    @crmClasses = session[:crmClasses]
     if @actualRelationsWithDomain != nil 
       if @actualRelationIndex < @actualRelationsWithDomain.length
         @actualRelation = @actualRelationsWithDomain[@actualRelationIndex]
@@ -140,7 +140,7 @@ class WelcomeController < ApplicationController
     end
   end
   
-  def postMapKorRelationRange
+  def mapKorRelationRange
     @kind = session[:kind]
     @crmClasses= session[:crmClasses]
     @actualRelation = session[:actualRelation]
@@ -150,42 +150,68 @@ class WelcomeController < ApplicationController
         break
       end
     end
-    @actualRelation.addChainLink @kind.crmClass # domain
+    
+    @actualRelation.addChainLink @kind.crmClass # domain, in postmapkorkind?
     @actualRelation.addChainLink mappedCRMClass # range
     
     @actualRelationIndex = session[:actualRelationIndex]
     @actualRelationIndex = @actualRelationIndex + 1
     session[:actualRelationIndex] = @actualRelationIndex # nötig?  
+    
+    preMapKorRelationProperty
   end
   
   def preMapKorRelationProperty
     @fittingCRMProperties = Array.new
     crmProperties = session[:crmProperties]
-    kind = session[:kind]
-    puts "crmProperties length : #{crmProperties.length}"
-    domain = session[:actualRelation].domain
-    puts "domain of actual relation: #{domain.name}:"
-    puts "#{kind.crmClass.label}"
     crmClasses = session[:crmClasses]
+    @kind = session[:kind]
+    @actualRelation = session[:actualRelation]    
     
-    crmClass = kind.crmClass # kind is domain of actual relation
-    
-    #domainClasses = Array.new
-    #domainClasses.push crmClass 
-    #domainClasses.push crmClass.getDirectOrIndirectSuperClasses
-    
-    puts "After"
+    #crmClass = kind.crmClass # kind is domain of actual relation
+    crmClass = @actualRelation.getLastDomainClassInChainLinks
+
     for crmProperty in crmProperties
-      puts crmProperty.label
-      #for domainClass in domainClasses
-        puts crmProperty.domain.label
         if crmClass.isA? crmProperty.domain
-          puts "crmClass is subclass"
           @fittingCRMProperties.push crmProperty
         end
-      #end
     end
     render 'mapKorRelationProperty' 
+  end
+  
+  def mapKorRelationProperty
+    propertyNumber = params[:property]
+    crmProperties = session[:crmProperties]
+    actualRelation = session[:actualRelation]
+    
+    puts propertyNumber
+    
+    for crmProperty in crmProperties
+      if crmProperty.number.to_i == propertyNumber.to_i
+        break
+      end
+    end   
+    actualRelation.addChainLinkProperty crmProperty
+    
+    puts actualRelation.chainLinks.last.label
+    puts crmProperty.label
+    puts crmProperty.range.label
+    
+    puts actualRelation.chainLinks.last.isA? crmProperty.range
+    
+    if !(actualRelation.chainLinks.last.isA? crmProperty.range) #range not yet reached-> continue chain linking
+      actualRelation.addChainLinkInnerNode crmProperty.range
+      preMapKorRelationProperty
+    else
+      puts "range reached -> map next actual relation"
+      #redirect_to action: "preMapKorRelationRange" and return  #range reached -> map next actual relation
+      preMapKorRelationRange and return
+      
+    end
+  end
+  
+  def displayMapping
+    puts "--------------------------END--------------------------"
   end
   
   private 
@@ -245,7 +271,9 @@ class WelcomeController < ApplicationController
   private
   def loadCRM
     if @graph == nil
-      @graph = RDF::Graph.load("http://erlangen-crm.org/140617/", :format => :rdfxml)
+      @graph = RDF::Graph.load("http://erlangen-crm.org/140617/")
+      #@graph = RDF::Graph.load("http://erlangen-crm.org/140617/", :format => :rdfxml)
+      #@graph = RDF::Graph.load("C:\Users\Sven\ECRM\ecrm_140617.owl.rdf", :format => :rdfxml)
       loadCRMClasses
       loadCRMProperties
     end
