@@ -3,13 +3,18 @@ Rails.application.routes.draw do
   resources :kinds
   
   get 'welcome/index'
-  get 'welcome/mapKorKind', to: 'welcome#mapKorKind'
-  get 'welcome/mapKorRelationRange', to: 'welcome#mapKorRelationRange'
-  get 'welcome/mapKorRelationProperty', to: 'welcome#mapKorRelationProperty'
+  post 'welcome/mapKorKind', to: 'welcome#mapKorKind'
+  post 'welcome/mapKorRelationRange', to: 'welcome#mapKorRelationRange'
+  post 'welcome/mapKorRelationProperty', to: 'welcome#mapKorRelationProperty'
+  get 'welcome/displayMapping', to: 'welcome#displayMapping'
   
-  get 'welcome/preMapKorKind', to: 'welcome#preMapKorKind'
-  get 'welcome/preMapKorRelationRange', to: 'welcome#preMapKorRelationRange'
-  get 'welcome/preMapKorRelationProperty', to: 'welcome#preMapKorRelationProperty'
+  get 'welcome/mapKorKindForm', to: 'welcome#mapKorKindForm'
+  get 'welcome/mapKorRelationRangeForm', to: 'welcome#mapKorRelationRangeForm'
+  get 'welcome/mapKorRelationPropertyForm', to: 'welcome#mapKorRelationPropertyForm'
+  
+  #get 'welcome/preMapKorKind', to: 'welcome#preMapKorKind'
+  #get 'welcome/preMapKorRelationRange', to: 'welcome#preMapKorRelationRange'
+  #get 'welcome/preMapKorRelationProperty', to: 'welcome#preMapKorRelationProperty'
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".

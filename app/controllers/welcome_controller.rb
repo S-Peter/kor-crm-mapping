@@ -1,7 +1,7 @@
 require 'bundler/setup'
 Bundler.require(:default)
 
-class WelcomeController < ApplicationController
+class WelcomeController < ApplicationController  
   @@ecrmNamespace = "http://erlangen-crm.org/140617/"
   @@owlClassURI = RDF::URI.new("http://www.w3.org/2002/07/owl#Class")
   @@rdfTypeURI = RDF::URI.new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
@@ -48,170 +48,199 @@ class WelcomeController < ApplicationController
     session[:kinds] = @kinds
     session[:relations] = @relations
    
-    preMapKorKind
-    
+   if @kinds.empty?
+    redirect_to action: "displayMapping"
+   else
+     kindIndex = 0
+     session[:kindIndex] = kindIndex
+     redirect_to action: "mapKorKindForm"
+   end
   end 
-  
-=begin  
-  def mapKorKind
-    postMapKorKind
-    puts "MapKorKind"
-    preMapKorRelationRange
-  end
-  
-  def mapKorRelationRange
-     postMapKorRelationRange
-     puts "MapKorRelationRange"
-     preMapKorRelationProperty
-  end
-  
-  def mapKorRelationProperty
-    postMapKorRelationProperty
-    puts "MapKorRelationProperty"
-  end
-=end
-  
-  def preMapKorKind
-    @kinds = session[:kinds]
-    @kindIndex = session[:kindIndex]
-    if @kindIndex == nil # no kind mapped yet
-      @kindIndex = 0
-      session[:kindIndex] = @kindIndex
-    end 
-    if @kindIndex < @kinds.length
-      @kind = @kinds[@kindIndex]
-      session[:kind] = @kind  
-      render 'mapKorKind' 
-    else # all kinds mapped -> end
-      displayMapping
-    end
-  end
-  
-  def mapKorKind
-    @kind = session[:kind]
-    @crmClasses= session[:crmClasses]
-    @relations = session[:relations]
+   
+  def mapKorKindForm
+    puts "mapKorKindForm"
     
-    for mappedCRMClass in @crmClasses do
-      if mappedCRMClass.number == params[:crmc].to_i
+    @crmClasses = session[:crmClasses]
+    
+    kinds = session[:kinds]
+    kindIndex = session[:kindIndex]
+    @kind = kinds[kindIndex]
+    session[:kind] = @kind  
+  end
+  
+  def mapKorKind
+    puts "mapKorKind"
+    #load relevant objects
+    @kind = session[:kind] # aus request?
+    kinds = session[:kinds]
+    relations = session[:relations]
+    @crmClasses= session[:crmClasses]
+    
+    #assign values/references
+    valid = false
+    for crmClass in @crmClasses do
+      puts crmClass.number.to_i
+      puts params[:crmc].to_i
+      if crmClass.number.to_i == params[:crmc].to_i
+        @kind.crmClass=crmClass
+        valid = true
         break
       end
     end
-    @kind.crmClass=mappedCRMClass
     
-    #calculate actual relations for given domain
-    @actualRelationsWithDomain = Array.new
-    for relation in @relations
+    #validate
+    if !valid
+      puts "Error!"
+      render "mapKorKindForm"
+    end
+
+    #compute actual relations for given domain
+    actualRelationsWithDomain = Array.new
+    for relation in relations
       if relation.actualRelations != nil
         for actualRelation in relation.actualRelations
           if actualRelation.domain == @kind
-            @actualRelationsWithDomain.push actualRelation      
+            actualRelationsWithDomain.push actualRelation      
           end
         end
       end
     end
-    session[:actualRelationsWithDomain] = @actualRelationsWithDomain
+    session[:actualRelationsWithDomain] = actualRelationsWithDomain
     
     #increment kindIndex
-    @kindIndex = session[:kindIndex]
-    @kindIndex = @kindIndex + 1
-    session[:kindIndex] = @kindIndex # nötig?
+    kindIndex = session[:kindIndex]
+    kindIndex = kindIndex + 1
+    session[:kindIndex] = kindIndex # nötig?
     
-    preMapKorRelationRange
+    #redirect
+    if !actualRelationsWithDomain.empty?
+      actualRelationIndex = 0
+      session[:actualRelationIndex] = actualRelationIndex
+      redirect_to action: "mapKorRelationRangeForm"
+    else # all kinds mapped -> end
+      redirect_to action: "displayMapping"
+    end 
   end
-    
-  def preMapKorRelationRange
-    puts "preMapKorRelationRange"
-    @actualRelationsWithDomain = session[:actualRelationsWithDomain]
-    @actualRelationIndex = session[:actualRelationIndex]
-    if @actualRelationIndex == nil # no actual relation for kind mapped yet
-      @actualRelationIndex = 0
-    end
-    @crmClasses = session[:crmClasses]
-    if @actualRelationsWithDomain != nil 
-      if @actualRelationIndex < @actualRelationsWithDomain.length
-        @actualRelation = @actualRelationsWithDomain[@actualRelationIndex]
-        session[:actualRelation] = @actualRelation
-        session[:actualRelationIndex] = @actualRelationIndex
-        render 'mapKorRelationRange'
-      end
-    else
-      preMapKorKind # all actual relations for kind mapped -> mapping of next kind
-    end
+  
+  def mapKorRelationRangeForm
+    puts "mapKorRelationRangeForm"
+    #load relevant objects
+    @crmClasses = session[:crmClasses]  
+      
+    actualRelationsWithDomain = session[:actualRelationsWithDomain]
+    actualRelationIndex = session[:actualRelationIndex]    
+    @actualRelation = actualRelationsWithDomain[actualRelationIndex]
+    session[:actualRelation] = @actualRelation
   end
   
   def mapKorRelationRange
-    @kind = session[:kind]
+    #load relevant objects
+    kind = session[:kind] # aus request?
     @crmClasses= session[:crmClasses]
+    crmProperties = session[:crmProperties]
     @actualRelation = session[:actualRelation]
+    actualRelationsWithDomain = session[:actualRelationsWithDomain]
     
-    for mappedCRMClass in @crmClasses do
-      if mappedCRMClass.number == params[:crmc].to_i
+    #assign values/references
+    valid = false
+    for crmClass in @crmClasses do
+      if crmClass.number.to_i == params[:crmc].to_i
+        @actualRelation.addChainLink kind.crmClass # domain
+        @actualRelation.addChainLink crmClass # range
+        valid= true
         break
       end
     end
     
-    @actualRelation.addChainLink @kind.crmClass # domain, in postmapkorkind?
-    @actualRelation.addChainLink mappedCRMClass # range
+    #validate
+    if !valid
+      puts "Error!"
+      render "mapKorRelationRangeForm"
+    end    
+ 
+    #increment index
+    actualRelationIndex = session[:actualRelationIndex]
+    actualRelationIndex = actualRelationIndex + 1
+    session[:actualRelationIndex] = actualRelationIndex # nötig?  
     
-    @actualRelationIndex = session[:actualRelationIndex]
-    @actualRelationIndex = @actualRelationIndex + 1
-    session[:actualRelationIndex] = @actualRelationIndex # nötig?  
-    
-    preMapKorRelationProperty
+    #redirect
+    domainClass = @actualRelation.getLastDomainClassInChainLinks
+    fittingCRMProperties = Array.new
+    for crmProperty in crmProperties
+      if domainClass.isA? crmProperty.domain
+        fittingCRMProperties.push crmProperty
+      end
+    end
+    session[:fittingCRMProperties] = fittingCRMProperties
+    redirect_to action: "mapKorRelationPropertyForm"
   end
   
-  def preMapKorRelationProperty
-    @fittingCRMProperties = Array.new
-    crmProperties = session[:crmProperties]
-    crmClasses = session[:crmClasses]
+  def mapKorRelationPropertyForm
+    puts "mapKorRelationPropertyForm"
+    #load relevant objects
+    @fittingCRMProperties = session[:fittingCRMProperties]
     @kind = session[:kind]
-    @actualRelation = session[:actualRelation]    
-    
-    #crmClass = kind.crmClass # kind is domain of actual relation
-    crmClass = @actualRelation.getLastDomainClassInChainLinks
-
-    for crmProperty in crmProperties
-        if crmClass.isA? crmProperty.domain
-          @fittingCRMProperties.push crmProperty
-        end
-    end
-    render 'mapKorRelationProperty' 
+    @actualRelation = session[:actualRelation]
   end
   
   def mapKorRelationProperty
+    #load relevant objects
     propertyNumber = params[:property]
     crmProperties = session[:crmProperties]
-    actualRelation = session[:actualRelation]
+    @actualRelation = session[:actualRelation]
+    actualRelationIndex = session[:actualRelationIndex] 
+    actualRelationsWithDomain = session[:actualRelationsWithDomain]
+    @fittingCRMProperties = session[:fittingCRMProperties]
+    @kind = session[:kind]
+    kindIndex = session[:kindIndex]
+    kinds = session[:kinds]
     
-    puts propertyNumber
-    
+    #assign values/references
+    valid = false
     for crmProperty in crmProperties
       if crmProperty.number.to_i == propertyNumber.to_i
+        @actualRelation.addChainLinkProperty crmProperty
+        valid = true
         break
       end
     end   
-    actualRelation.addChainLinkProperty crmProperty
     
-    puts actualRelation.chainLinks.last.label
-    puts crmProperty.label
+    #validate
+    if !valid
+      puts "Error!"
+      render "mapKorRelationPropertyForm"
+    end
+    
+    #redirect
+    puts @actualRelation.chainLinks.last.label
     puts crmProperty.range.label
-    
-    puts actualRelation.chainLinks.last.isA? crmProperty.range
-    
-    if !(actualRelation.chainLinks.last.isA? crmProperty.range) #range not yet reached-> continue chain linking
-      actualRelation.addChainLinkInnerNode crmProperty.range
-      preMapKorRelationProperty
-    else
-      puts "range reached -> map next actual relation"
-      #redirect_to action: "preMapKorRelationRange" and return  #range reached -> map next actual relation
-      preMapKorRelationRange and return
-      
+    if !(@actualRelation.chainLinks.last.isA? crmProperty.range) #range not yet reached-> continue chain linking
+      puts "noch eine Runde!"
+      @actualRelation.addChainLinkInnerNode crmProperty.range
+      domainClass = @actualRelation.getLastDomainClassInChainLinks
+      @fittingCRMProperties = Array.new
+      for crmProperty in crmProperties
+        if domainClass.isA? crmProperty.domain
+          @fittingCRMProperties.push crmProperty
+        end
+      end
+      session[:fittingCRMProperties] = @fittingCRMProperties
+      redirect_to action: "mapKorRelationPropertyForm"
+    else #range reached -> map next actual relation 
+      if actualRelationIndex < actualRelationsWithDomain.length
+        redirect_to action: "mapKorRelationRangeForm" 
+      else
+        if kindIndex < kinds.length
+          redirect_to action: "mapKorKindForm"
+        else
+          redirect_to action: "displayMapping"
+        end
+      end
     end
   end
   
   def displayMapping
-    puts "--------------------------END--------------------------"
+    puts "displayMapping"
   end
   
   private 
