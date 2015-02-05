@@ -1,24 +1,19 @@
 Rails.application.routes.draw do
   
-  get 'welcome/index', to: 'welcome#index'
-  post 'welcome/mapKorKind', to: 'welcome#mapKorKind'
-  post 'welcome/mapKorRelationRange', to: 'welcome#mapKorRelationRange'
-  post 'welcome/mapKorRelationProperty', to: 'welcome#mapKorRelationProperty'
-  get 'welcome/displayMapping', to: 'welcome#displayMapping'
-  
+  get 'welcome/startMapping', to: 'welcome#startMapping'
   get 'welcome/mapKorKindForm', to: 'welcome#mapKorKindForm'
+  post 'welcome/mapKorKind', to: 'welcome#mapKorKind'
   get 'welcome/mapKorRelationRangeForm', to: 'welcome#mapKorRelationRangeForm'
+  post 'welcome/mapKorRelationRange', to: 'welcome#mapKorRelationRange'
   get 'welcome/mapKorRelationPropertyForm', to: 'welcome#mapKorRelationPropertyForm'
-  
-  #get 'welcome/preMapKorKind', to: 'welcome#preMapKorKind'
-  #get 'welcome/preMapKorRelationRange', to: 'welcome#preMapKorRelationRange'
-  #get 'welcome/preMapKorRelationProperty', to: 'welcome#preMapKorRelationProperty'
+  post 'welcome/mapKorRelationProperty', to: 'welcome#mapKorRelationProperty' 
+  get 'welcome/displayMapping', to: 'welcome#displayMapping'
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
   # You can have the root of your site routed with "root"
-  root 'welcome#index'
+  root 'welcome#startMapping'
 
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'

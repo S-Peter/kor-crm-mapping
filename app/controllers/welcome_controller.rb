@@ -16,7 +16,7 @@ class WelcomeController < ApplicationController
   @@owlInverseOf = RDF::URI.new("http://www.w3.org/2002/07/owl#inverseOf")
   @@rdfsSubPropertyOfURI = RDF::URI.new("http://www.w3.org/2000/01/rdf-schema#subPropertyOf")
 
-  def index  
+  def startMapping  
     #Load KOR-Resources
     loadKor
     #Load CRM-Resources
@@ -216,6 +216,8 @@ class WelcomeController < ApplicationController
   
   def displayMapping
     puts "displayMapping"
+    @kinds = session[:kinds]
+    @relations = session[:relations]
   end
   
   private 
