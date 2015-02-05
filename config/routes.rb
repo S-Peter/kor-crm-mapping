@@ -1,8 +1,6 @@
 Rails.application.routes.draw do
   
-  resources :kinds
-  
-  get 'welcome/index'
+  get 'welcome/index', to: 'welcome#index'
   post 'welcome/mapKorKind', to: 'welcome#mapKorKind'
   post 'welcome/mapKorRelationRange', to: 'welcome#mapKorRelationRange'
   post 'welcome/mapKorRelationProperty', to: 'welcome#mapKorRelationProperty'
@@ -20,7 +18,7 @@ Rails.application.routes.draw do
   # See how all your routes lay out with "rake routes".
 
   # You can have the root of your site routed with "root"
-  root 'kinds#index'
+  root 'welcome#index'
 
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'

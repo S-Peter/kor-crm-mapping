@@ -15,26 +15,6 @@ class WelcomeController < ApplicationController
   @@rdfsDomain = RDF::URI.new("http://www.w3.org/2000/01/rdf-schema#domain")
   @@owlInverseOf = RDF::URI.new("http://www.w3.org/2002/07/owl#inverseOf")
   @@rdfsSubPropertyOfURI = RDF::URI.new("http://www.w3.org/2000/01/rdf-schema#subPropertyOf")
-  
-  @graph
-  
-  @crmClasses
-  @crmProperties
-  
-  @kinds
-  @relations
-  
-  @kindIndex
-  @kind
-  
-=begin
-  def initialize
-    #Load KOR-Resources
-    loadKor
-    #Load CRM-Resources
-    loadCRM
-  end
-=end  
 
   def index  
     #Load KOR-Resources
@@ -79,8 +59,6 @@ class WelcomeController < ApplicationController
     #assign values/references
     valid = false
     for crmClass in @crmClasses do
-      puts crmClass.number.to_i
-      puts params[:crmc].to_i
       if crmClass.number.to_i == params[:crmc].to_i
         @kind.crmClass=crmClass
         valid = true
@@ -212,10 +190,7 @@ class WelcomeController < ApplicationController
     end
     
     #redirect
-    puts @actualRelation.chainLinks.last.label
-    puts crmProperty.range.label
     if !(@actualRelation.chainLinks.last.isA? crmProperty.range) #range not yet reached-> continue chain linking
-      puts "noch eine Runde!"
       @actualRelation.addChainLinkInnerNode crmProperty.range
       domainClass = @actualRelation.getLastDomainClassInChainLinks
       @fittingCRMProperties = Array.new
@@ -257,52 +232,63 @@ class WelcomeController < ApplicationController
   
   private
   def loadKor
-    puts ActiveRecord::Base.connection.current_database
+    #puts ActiveRecord::Base.connection.current_database
     @kinds = Kind.all
     @relations = Relation.all
     deriveActualRelationsFromRelationships
+    for relation in @relations
+      for actualRelation in relation.actualRelations
+        puts actualRelation.relation.name
+        puts actualRelation.domain.name
+        puts actualRelation.range.name
+      end
+    end
   end
   
   private
   def deriveActualRelationsFromRelationships
-    # TODO relationships = Relationship.all
-    relationships = Relationship.find([473150,473297])
-    for relationship in relationships
+    sqlActualRelations = Relationship.
+    joins("JOIN entities as froms on froms.id = relationships.from_id").
+    joins("JOIN entities as tos on tos.id = relationships.to_id").
+    group("relationships.relation_id", "froms.kind_id", "tos.kind_id")
+ 
+    for p in sqlActualRelations do
       for relation in @relations
-        if relation.id == relationship.relation.id
-          relationOfRelationship = relation
+        if relation.id.to_i == Relationship.find(p.id).relation_id.to_i
+          break
         end
       end
-      domainClassOfRelationship = relationship.domain.kind
-      rangeClassOfRelationship = relationship.range.kind
-      
-      actualRelations = relationOfRelationship.actualRelations
-      actualRelationWithSameDomainAndRangeExists = false;
-      if !actualRelations.nil?
-       for actualRelation in actualRelations
-          if actualRelation.domain == domainClassOfRelationship and actualRelation.range == rangeClassOfRelationship
-             actualRelationWithSameDomainAndRangeExists=true;
-          end
-       end
-       if actualRelationWithSameDomainAndRangeExists == false
-          newActualRelation = ActualRelation.new relationOfRelationship, domainClassOfRelationship, rangeClassOfRelationship
-          actualRelations.push newActualRelation
-       end
-      else
-       newActualRelation = ActualRelation.new relationOfRelationship, domainClassOfRelationship, rangeClassOfRelationship
-       actualRelations = Array.new
-       actualRelations.push newActualRelation
-       relationOfRelationship.actualRelations=actualRelations
+      for domain in @kinds
+        if domain.id.to_i == Entity.find(p.from_id).kind_id.to_i
+          break
+        end
       end
-     end
+      for range in @kinds
+        if range.id.to_i == Entity.find(p.to_id).kind_id.to_i
+          break
+        end
+      end
+      puts relation.name
+      puts domain.name
+      puts range.name
+      actualRelation = ActualRelation.new relation, domain, range
+      actualRelations = relation.actualRelations
+      if actualRelations == nil
+        actualRelations = Array.new
+        actualRelations.push actualRelation
+        relation.actualRelations = actualRelations
+      else
+        actualRelations.push actualRelation
+      end
+    end
   end
+
    
   private
   def loadCRM
     if @graph == nil
       @graph = RDF::Graph.load("http://erlangen-crm.org/140617/")
       #@graph = RDF::Graph.load("http://erlangen-crm.org/140617/", :format => :rdfxml)
-      #@graph = RDF::Graph.load("C:\Users\Sven\ECRM\ecrm_140617.owl.rdf", :format => :rdfxml)
       loadCRMClasses
       loadCRMProperties
     end
@@ -344,7 +330,6 @@ class WelcomeController < ApplicationController
       statements.each_object do |object|
         if object.uri?
           if object.starts_with? @@ecrmNamespace
-            puts object.inspect
             superClass = getClassOfUri object
             crmClass.addSuperClass superClass
             superClass.addSubClass crmClass

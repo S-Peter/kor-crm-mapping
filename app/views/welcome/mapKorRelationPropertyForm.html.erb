@@ -6,11 +6,11 @@
 	</tr>
 	<tr>
 		<td>CRM Domain</td>
-		<td><%= @kind.crmClass.label %></td>
+		<td><%= @actualRelation.chainLinks.last.label %></td>
 	</tr>
 	<tr>
 		<td>CRM Range</td>
-		<td><%= @actualRelation.chainLinks.last.label %></td>
+		<td><%= @actualRelation.chainLinks[@actualRelation.chainLinks.length-2].label %></td>
 	</tr>
 	<tr>
 		<td><%= label_tag(:property, "CRM Property") %></td>
