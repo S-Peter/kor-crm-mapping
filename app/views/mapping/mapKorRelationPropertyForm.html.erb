@@ -1,4 +1,4 @@
-<%= form_tag({controller: "welcome", action: "mapKorRelationProperty"}, method: "post") do %>
+<%= form_tag({controller: "mapping", action: "mapKorRelationProperty"}, method: "post") do %>
 <table>
 	<tr>
 		<td>Actual Relation</td>
@@ -6,11 +6,11 @@
 	</tr>
 	<tr>
 		<td>CRM Domain</td>
-		<td><%= @actualRelation.chainLinks.last.label %></td>
+		<td><%= @actualRelation.chainLinks[@actualRelation.chainLinks.length-2].label %></td>		
 	</tr>
 	<tr>
 		<td>CRM Range</td>
-		<td><%= @actualRelation.chainLinks[@actualRelation.chainLinks.length-2].label %></td>
+		<td><%= @actualRelation.chainLinks.last.label %></td>
 	</tr>
 	<tr>
 		<td><%= label_tag(:property, "CRM Property") %></td>
