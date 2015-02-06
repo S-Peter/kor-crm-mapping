@@ -66,9 +66,11 @@ class CrmClass < CrmRessource
     directOrIndirectSubClasses = Array.new
     if @subClasses != nil
       for subClass in @subClasses
-        directOrIndirectSubClasses.push subClass
-        directOrIndirectSubClasses.push subClass.getDirectOrIndirectSubClasses
+        directOrIndirectSubClasses = directOrIndirectSubClasses.push subClass
+        directOrIndirectSubClasses = directOrIndirectSubClasses.concat subClass.getDirectOrIndirectSubClasses
       end
+    else
+      puts "No subclasses for #{self.label}"
     end
     return directOrIndirectSubClasses
   end
@@ -77,8 +79,8 @@ class CrmClass < CrmRessource
     directOrIndirectSuperClasses = Array.new
     if @superClasses != nil
       for superClass in @superClasses
-        directOrIndirectSuperClasses.push superClass
-        directOrIndirectSuperClasses.push superClass.getDirectOrIndirectSuperClasses
+        directOrIndirectSuperClasses = directOrIndirectSuperClasses.push superClass
+        directOrIndirectSuperClasses = directOrIndirectSuperClasses.concat superClass.getDirectOrIndirectSuperClasses
       end
     end
     return directOrIndirectSuperClasses

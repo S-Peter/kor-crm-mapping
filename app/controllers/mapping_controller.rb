@@ -67,8 +67,6 @@ class MappingController < ApplicationController
       end
     end
     
-    puts "Kind: #{@kind.name}, Class: #{@kind.crmClass.label}"
-    
     #validate
     if !valid
       puts "Error!"
@@ -87,10 +85,6 @@ class MappingController < ApplicationController
       end
     end
     session[:actualRelationsWithDomain] = actualRelationsWithDomain
-    
-    #for actualRelationWithDomain in actualRelationsWithDomain
-    #  puts "Relation: #{actualRelationWithDomain.relation.name}, domain: #{actualRelationWithDomain.domain.name}, range: #{actualRelationWithDomain.range.name}"
-    #end
     
     #increment kindIndex
     kindIndex = session[:kindIndex]
@@ -119,45 +113,65 @@ class MappingController < ApplicationController
   end
   
   def mapKorRelationRange
-    #load relevant objects
-    kind = session[:kind] # aus request?
-    @crmClasses= session[:crmClasses]
-    crmProperties = session[:crmProperties]
-    @actualRelation = session[:actualRelation]
-    actualRelationsWithDomain = session[:actualRelationsWithDomain]
-    
-    #assign values/references
-    valid = false
-    for crmClass in @crmClasses do
-      if crmClass.number.to_i == params[:crmc].to_i
-        @actualRelation.addChainLink kind.crmClass # domain
-        @actualRelation.addChainLink crmClass # range
-        valid= true
-        break
+    puts params.inspect
+    if params[:commit].eql? "Don't map"
+      actualRelationIndex = session[:actualRelationIndex]
+      actualRelationsWithDomain = session[:actualRelationsWithDomain]
+      #increment index
+      actualRelationIndex = actualRelationIndex + 1
+      session[:actualRelationIndex] = actualRelationIndex # nötig? 
+      if actualRelationIndex < actualRelationsWithDomain.length
+        redirect_to action: "mapKorRelationRangeForm" 
+      else
+        kindIndex = session[:kindIndex]
+        kinds= session[:kinds]
+        if kindIndex < kinds.length
+          redirect_to action: "mapKorKindForm"
+        else
+          redirect_to action: "displayMapping"
+        end
       end
-    end
-    
-    #validate
-    if !valid
-      puts "Error!"
-      render "mapKorRelationRangeForm"
-    end    
- 
-    #increment index
-    actualRelationIndex = session[:actualRelationIndex]
-    actualRelationIndex = actualRelationIndex + 1
-    session[:actualRelationIndex] = actualRelationIndex # nötig?  
-    
-    #redirect
-    domainClass = @actualRelation.getLastDomainClassInChainLinks
-    fittingCRMProperties = Array.new
-    for crmProperty in crmProperties
-      if domainClass.isA? crmProperty.domain
-        fittingCRMProperties.push crmProperty
+    else
+      #load relevant objects
+      kind = session[:kind] # aus request?
+      @crmClasses= session[:crmClasses]
+      crmProperties = session[:crmProperties]
+      @actualRelation = session[:actualRelation]
+      actualRelationsWithDomain = session[:actualRelationsWithDomain]
+      
+      #assign values/references
+      valid = false
+      for crmClass in @crmClasses do
+        if crmClass.number.to_i == params[:crmc].to_i
+          @actualRelation.addChainLink kind.crmClass # domain
+          @actualRelation.addChainLink crmClass # range
+          valid= true
+          break
+        end
       end
+      
+      #validate
+      if !valid
+        puts "Error!"
+        render "mapKorRelationRangeForm"
+      end    
+   
+      #increment index
+      actualRelationIndex = session[:actualRelationIndex]
+      actualRelationIndex = actualRelationIndex + 1
+      session[:actualRelationIndex] = actualRelationIndex # nötig?  
+      
+      #redirect
+      domainClass = @actualRelation.getLastDomainClassInChainLinks
+      fittingCRMProperties = Array.new
+      for crmProperty in crmProperties
+        if domainClass.isA? crmProperty.domain
+          fittingCRMProperties.push crmProperty
+        end
+      end
+      session[:fittingCRMProperties] = fittingCRMProperties
+      redirect_to action: "mapKorRelationPropertyForm"
     end
-    session[:fittingCRMProperties] = fittingCRMProperties
-    redirect_to action: "mapKorRelationPropertyForm"
   end
   
   def mapKorRelationPropertyForm
@@ -198,16 +212,12 @@ class MappingController < ApplicationController
     
     #redirect
     if !(@actualRelation.chainLinks.last.isA? crmProperty.range) #range not yet reached-> continue chain linking
-      @actualRelation.addChainLinkInnerNode crmProperty.range
-      domainClass = @actualRelation.getLastDomainClassInChainLinks
-      @fittingCRMProperties = Array.new
-      for crmProperty in crmProperties
-        if domainClass.isA? crmProperty.domain
-          @fittingCRMProperties.push crmProperty
-        end
-      end
-      session[:fittingCRMProperties] = @fittingCRMProperties
-      redirect_to action: "mapKorRelationPropertyForm"
+      puts crmProperty.range.label
+      fittingCRMClasses = Array.new
+      fittingCRMClasses = fittingCRMClasses.push crmProperty.range
+      fittingCRMClasses = crmProperty.range.getDirectOrIndirectSubClasses
+      session[:fittingCRMClasses] = fittingCRMClasses
+      redirect_to action: "mapKorRelationInnerNodeForm"
     else #range reached -> map next actual relation 
       if actualRelationIndex < actualRelationsWithDomain.length
         redirect_to action: "mapKorRelationRangeForm" 
@@ -219,6 +229,48 @@ class MappingController < ApplicationController
         end
       end
     end
+  end
+  
+  def mapKorRelationInnerNodeForm
+    @fittingCRMClasses = session[:fittingCRMClasses]
+    @actualRelation = session[:actualRelation]
+  end
+  
+  def mapKorRelationInnerNode
+    #load relevant objects
+    crmClasses = session[:crmClasses]
+    crmProperties = session[:crmProperties]
+    @actualRelation = session[:actualRelation]
+    @fittingCRMClasses = session[:fittingCRMClasses]
+    
+    #assign values/references
+    valid = false
+    for crmClass in crmClasses do
+      if crmClass.number.to_i == params[:crmc].to_i
+        @actualRelation.addChainLinkInnerNode crmClass
+        valid = true
+        break
+      end
+    end
+    
+     #validate
+    if !valid
+      puts "Error!"
+      render "mapKorRelationInnerNodeForm"
+    end
+     
+     #compute fitting properties
+    domainClass = @actualRelation.getLastDomainClassInChainLinks
+    fittingCRMProperties = Array.new
+    for crmProperty in crmProperties
+      if domainClass.isA? crmProperty.domain
+        fittingCRMProperties.push crmProperty
+      end
+    end
+    session[:fittingCRMProperties] = fittingCRMProperties
+    
+    #redirect
+    redirect_to action: "mapKorRelationPropertyForm" 
   end
   
   def displayMapping

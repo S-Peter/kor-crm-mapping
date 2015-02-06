@@ -29,10 +29,12 @@
 		      	<td><%= actualRelation.domain.name %></td>
 		      	<td><%= actualRelation.range.name %></td>
 		      	<td>
-		      		<% actualRelation.chainLinks.each do |crmRessource| %>
-		      			<%= crmRessource.label %>
-		      			<%= " " %>
-		      		<% end %>
+		      		<% if actualRelation.chainLinks != nil%>
+		      			<% actualRelation.chainLinks.each do |crmRessource| %>
+		      				<%= crmRessource.label %>
+		      				<%= " " %>
+		      			<% end %>
+		      		<% end%>		      		
 		      	</td>
     		</tr>
     	<% end %>

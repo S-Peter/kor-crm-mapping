@@ -1,15 +1,5 @@
 Rails.application.routes.draw do
 
-=begin  
-  get 'welcome/startMapping', to: 'welcome#startMapping'
-  get 'welcome/mapKorKindForm', to: 'welcome#mapKorKindForm'
-  post 'welcome/mapKorKind', to: 'welcome#mapKorKind'
-  get 'welcome/mapKorRelationRangeForm', to: 'welcome#mapKorRelationRangeForm'
-  post 'welcome/mapKorRelationRange', to: 'welcome#mapKorRelationRange'
-  get 'welcome/mapKorRelationPropertyForm', to: 'welcome#mapKorRelationPropertyForm'
-  post 'welcome/mapKorRelationProperty', to: 'welcome#mapKorRelationProperty' 
-  get 'welcome/displayMapping', to: 'welcome#displayMapping'
-=end  
   get 'mapping/startMapping', to: 'mapping#startMapping'
   get 'mapping/mapKorKindForm', to: 'mapping#mapKorKindForm'
   post 'mapping/mapKorKind', to: 'mapping#mapKorKind'
@@ -17,6 +7,8 @@ Rails.application.routes.draw do
   post 'mapping/mapKorRelationRange', to: 'mapping#mapKorRelationRange'
   get 'mapping/mapKorRelationPropertyForm', to: 'mapping#mapKorRelationPropertyForm'
   post 'mapping/mapKorRelationProperty', to: 'mapping#mapKorRelationProperty' 
+  get 'mapping/mapKorRelationInnerNodeForm', to: 'mapping#mapKorRelationInnerNodeForm'
+  post 'mapping/mapKorRelationInnerNode', to: 'mapping#mapKorRelationInnerNode' 
   get 'mapping/displayMapping', to: 'mapping#displayMapping'
 
   # The priority is based upon order of creation: first created -> highest priority.

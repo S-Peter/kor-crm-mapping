@@ -6,7 +6,7 @@ require 'rails/all'
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-module Mysqltestproject
+module KorCrmMapping
   class Application < Rails::Application
     config.cache_store = :memory_store, { size: 512.megabytes }
     # Settings in config/environments/* take precedence over those specified here.
