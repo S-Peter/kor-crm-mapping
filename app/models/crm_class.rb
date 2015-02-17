@@ -1,5 +1,3 @@
-require 'json'
-
 class CrmClass < CrmRessource
   @uri
   @comment
@@ -103,28 +101,6 @@ class CrmClass < CrmRessource
       end
     end
     return isA
-  end
-  
-  def to_s
-    "CrmClass:\n   #{@uri}, #{@notation}, #{@label}, #{@comment}\n"
-  end
- 
-  def as_json(*a)
-    {
-      "json_class"   => self.class.name,
-      "data"         => {"uri" => uri, "notation" => notation, "label" => label, "comment" => comment }
-    }.to_json(*a)
-  end
- 
-  #def self.json_create(o)
-  #  new(*o["data"])
-  #end
-  
-  def self.json_create(o)
-    #new(*o["data"])
-    crmClass = new(JSON.parse(o)["data"])
-    #kind.fancy = 12
-    crmClass
   end
  
 end
