@@ -42,6 +42,10 @@ class ActualRelation
     @chainLinks
   end
   
+  def chainLinks=(chainLinks)
+    @chainLinks = chainLinks
+  end
+  
   def getLastDomainClassInChainLinks
     return @chainLinks[@chainLinks.length-2]
   end

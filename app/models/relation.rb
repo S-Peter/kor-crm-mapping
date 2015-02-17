@@ -8,9 +8,9 @@ class Relation < ActiveRecord::Base #RelationshipType
 	
 	@actualRelations
 	
-	def initialize
-		@actualRelations = Array.new
-	end
+	#def initialize #if method exists no instance is created!!!
+	#	@actualRelations = Array.new
+	#end
 	
 	def actualRelations
 		return @actualRelations
